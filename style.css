@@ -66,6 +66,7 @@ h1{
 }
 .decal{
     display: flex;
+    min-height: 450px;
     width: 50vw;
     height: 40vh;
     position: absolute;
