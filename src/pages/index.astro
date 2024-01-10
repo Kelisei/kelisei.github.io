@@ -1,0 +1,25 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Project from "../components/Project.astro"
+---
+
+<Layout title="KV">
+  <div class="p-4 w-screen h-screen mb-96 flex flex-col text-center">
+    <h1
+      class="text-8xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-purple-500 to-pink-600"
+    >
+      Kelisei Ventura
+    </h1>
+    <h2
+      class="text-3xl font-extrabold text-white"
+    >
+      Proyects
+    </h2>
+    <div class="flex flex-wrap gap-8 justify-center">
+        <Project href="https://github.com/Kelisei/KFTR5" title="KFTR5" body="Twitter clone made with Flask, Sqlite3, Tailwind and plain Javascript (jquery and ajax)." imagePath="/src/assets/KFTR5.png" altText="Beautiful social network"></Project>
+        <Project href="https://github.com/Kelisei/pong_javascript" title="Pong" body="Pong clone made with javascript." imagePath="/src/assets/Pong.png" altText="Beautiful pong clone"></Project>
+        <Project href="https://github.com/Kelisei/LDG-page" title="LDG" body="Static website for football player agency (unfinished) made with Vue." imagePath="/src/assets/LDG.png" altText="Beautiful static website"></Project>
+        <Project href="https://github.com/Kelisei/PyGame_Spaceshoter" title="Pygame spaceshooter" body="Arcade game made with Pygame." imagePath="/src/assets/Spaceshooter.png" altText="Beautiful social network"></Project>
+      </div>
+  </div>
+</Layout>
