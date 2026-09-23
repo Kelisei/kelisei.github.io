@@ -1,25 +1,208 @@
 ---
-import Layout from "../layouts/Layout.astro";
-import Project from "../components/Project.astro"
+import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
+import Layout from '../layouts/Layout.astro';
+import arkantosImg from '../assets/arkantos.png';
+import arkshipImg from '../assets/arkship.png';
+import orgmodeImg from '../assets/orgmode-nvim.png';
+import kftr5Img from '../assets/KFTR5.png';
+
+interface BlogPost {
+	slug: string;
+	data: {
+		title: string;
+		description: string;
+		pubDate: Date;
+		updatedDate?: Date;
+	};
+}
+
+const siteTitle = import.meta.env.PUBLIC_SITE_TITLE || "Kelisei Ventura";
+const authorName = import.meta.env.PUBLIC_AUTHOR_NAME || "Francisco Percara";
+const role = import.meta.env.PUBLIC_ROLE || "Junior Software / Platform Engineer";
+const company = import.meta.env.PUBLIC_COMPANY || "MetLife";
+const githubUrl = import.meta.env.PUBLIC_GITHUB_URL || "https://github.com/Kelisei";
+const kftr5Url = import.meta.env.PUBLIC_KFTR5_URL || "https://github.com/Kelisei/KFTR5";
+const arkantosUrl = import.meta.env.PUBLIC_ARKANTOS_URL || "#";
+const arkshipUrl = import.meta.env.PUBLIC_ARKSHIP_URL || "#";
+const orgmodeUrl = import.meta.env.PUBLIC_ORGMODE_URL || "#";
+
+const rawPosts = ((await getCollection('blog')) || []) as unknown as BlogPost[];
+const posts = rawPosts.sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
+
+const projects = [
+	{
+		title: "Arkantos",
+		description: "Custom code editor built locally for desktop development.",
+		image: arkantosImg,
+		alt: "Arkantos code editor interface",
+		status: "In progress",
+		href: arkantosUrl,
+		hasLink: arkantosUrl !== "#",
+	},
+	{
+		title: "Arkship",
+		description: "Space simulation and strategy game in active development.",
+		image: arkshipImg,
+		alt: "Arkship game screenshot",
+		status: "In progress",
+		href: arkshipUrl,
+		hasLink: arkshipUrl !== "#",
+	},
+	{
+		title: "Org Mode Neovim Plugin",
+		description: "Neovim plugin bringing structured notes and task management into modern Neovim workflows.",
+		image: orgmodeImg,
+		alt: "Org mode Neovim plugin screenshot",
+		status: "In progress",
+		href: orgmodeUrl,
+		hasLink: orgmodeUrl !== "#",
+	},
+	{
+		title: "KFTR5",
+		description: "Twitter clone built with Flask, SQLite3, Tailwind CSS, and vanilla JavaScript.",
+		image: kftr5Img,
+		alt: "KFTR5 project preview",
+		status: null,
+		href: kftr5Url,
+		hasLink: true,
+	},
+];
 ---
 
-<Layout title="KV">
-  <div class="p-4 w-screen h-screen mb-96 flex flex-col text-center">
-    <h1
-      class="text-8xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-purple-500 to-pink-600"
-    >
-      Kelisei Ventura
-    </h1>
-    <h2
-      class="text-3xl font-extrabold text-white"
-    >
-      Proyects
-    </h2>
-    <div class="flex flex-wrap gap-8 justify-center">
-        <Project href="https://github.com/Kelisei/KFTR5" title="KFTR5" body="Twitter clone made with Flask, Sqlite3, Tailwind and plain Javascript (jquery and ajax)." imagePath="/src/assets/KFTR5.png" altText="Beautiful social network"></Project>
-        <Project href="https://github.com/Kelisei/pong_javascript" title="Pong" body="Pong clone made with javascript." imagePath="/src/assets/Pong.png" altText="Beautiful pong clone"></Project>
-        <Project href="https://github.com/Kelisei/LDG-page" title="LDG" body="Static website for football player agency (unfinished) made with Vue." imagePath="/src/assets/LDG.png" altText="Beautiful static website"></Project>
-        <Project href="https://github.com/Kelisei/PyGame_Spaceshoter" title="Pygame spaceshooter" body="Arcade game made with Pygame." imagePath="/src/assets/Spaceshooter.png" altText="Beautiful social network"></Project>
-      </div>
-  </div>
+<Layout title={`${siteTitle} | Portfolio & Blog`}>
+	<div class="space-y-16">
+		<header class="space-y-4 border-b border-ctp-surface0 pb-8">
+			<div class="space-y-2">
+				<h1 class="text-4xl font-extrabold tracking-tight text-ctp-text sm:text-5xl">
+					{siteTitle}
+				</h1>
+				<p class="text-xl font-medium text-ctp-lavender">
+					{authorName}
+				</p>
+				<p class="text-lg text-ctp-subtext1">
+					{role} at <span class="font-semibold text-ctp-mauve">{company}</span>
+				</p>
+			</div>
+			<div class="flex items-center gap-4 text-sm">
+				<a
+					href={githubUrl}
+					target="_blank"
+					rel="noreferrer"
+					class="font-medium text-ctp-lavender hover:text-ctp-mauve transition-colors"
+				>
+					GitHub &rarr;
+				</a>
+				<a
+					href="#projects"
+					class="font-medium text-ctp-subtext0 hover:text-ctp-text transition-colors"
+				>
+					Projects
+				</a>
+				<a
+					href="#blog"
+					class="font-medium text-ctp-subtext0 hover:text-ctp-text transition-colors"
+				>
+					Blog
+				</a>
+			</div>
+		</header>
+
+		<section id="projects" class="space-y-6">
+			<div class="border-b border-ctp-surface0 pb-2">
+				<h2 class="text-2xl font-bold tracking-tight text-ctp-text">
+					Projects
+				</h2>
+			</div>
+
+			<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+				{projects.map((project) => (
+					<article class="flex flex-col overflow-hidden rounded-xl border border-ctp-surface0 bg-ctp-mantle transition-colors hover:border-ctp-surface1">
+						<div class="aspect-video w-full overflow-hidden bg-ctp-crust">
+							<Image
+								src={project.image}
+								alt={project.alt}
+								class="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+							/>
+						</div>
+						<div class="flex flex-1 flex-col justify-between p-5 space-y-4">
+							<div class="space-y-2">
+								<div class="flex items-center justify-between gap-2">
+									<h3 class="text-xl font-semibold text-ctp-text">
+										{project.title}
+									</h3>
+									{project.status && (
+										<span class="rounded px-2 py-0.5 text-xs font-medium text-ctp-mauve bg-ctp-surface0">
+											{project.status}
+										</span>
+									)}
+								</div>
+								<p class="text-sm leading-relaxed text-ctp-subtext0">
+									{project.description}
+								</p>
+							</div>
+
+							{project.hasLink && (
+								<div>
+									<a
+										href={project.href}
+										target="_blank"
+										rel="noreferrer"
+										class="inline-flex items-center text-sm font-medium text-ctp-lavender hover:text-ctp-mauve transition-colors"
+									>
+										View Repository &rarr;
+									</a>
+								</div>
+							)}
+						</div>
+					</article>
+				))}
+			</div>
+		</section>
+
+		<section id="blog" class="space-y-6">
+			<div class="flex items-baseline justify-between border-b border-ctp-surface0 pb-2">
+				<h2 class="text-2xl font-bold tracking-tight text-ctp-text">
+					Blog
+				</h2>
+			</div>
+
+			{posts.length === 0 ? (
+				<p class="text-sm text-ctp-subtext0">No posts yet.</p>
+			) : (
+				<div class="divide-y divide-ctp-surface0 rounded-xl border border-ctp-surface0 bg-ctp-mantle">
+					{posts.map((post) => {
+						const formattedDate = post.data.pubDate.toLocaleDateString('en-US', {
+							year: 'numeric',
+							month: 'short',
+							day: 'numeric',
+						});
+						return (
+							<a
+								href={`/blog/${post.slug}`}
+								class="group flex flex-col justify-between gap-2 p-5 transition-colors hover:bg-ctp-surface0/30 sm:flex-row sm:items-center"
+							>
+								<div class="space-y-1">
+									<h3 class="text-lg font-semibold text-ctp-text group-hover:text-ctp-mauve transition-colors">
+										{post.data.title}
+									</h3>
+									<p class="text-sm text-ctp-subtext0">
+										{post.data.description}
+									</p>
+								</div>
+								<time
+									datetime={post.data.pubDate.toISOString()}
+									class="shrink-0 text-xs text-ctp-subtext0"
+								>
+									{formattedDate}
+								</time>
+							</a>
+						);
+					})}
+				</div>
+			)}
+		</section>
+	</div>
 </Layout>

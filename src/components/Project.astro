@@ -1,5 +1,7 @@
 ---
-import { Image, imageConfig } from "astro:assets";
+import type { ImageMetadata } from "astro";
+import { Image } from "astro:assets";
+
 interface Props {
   title: string;
   body: string;
@@ -7,20 +9,20 @@ interface Props {
   imagePath: string;
   altText: string;
 }
+
 const { href, title, body, imagePath, altText } = Astro.props;
-const images = import.meta.glob("/src/assets/*.{jpeg,jpg,png,gif}");
-if (!images[imagePath])
-  throw new Error(
-    `"${imagePath}" does not exist in glob: "src/assets/*.{jpeg,jpg,png,gif}"`
-  );
+const images = import.meta.glob<{ default: ImageMetadata }>("/src/assets/*.{jpeg,jpg,png,gif}");
+if (!images[imagePath]) {
+  throw new Error(`"${imagePath}" does not exist in glob: "src/assets/*.{jpeg,jpg,png,gif}"`);
+}
 ---
 
-<div class="mt-10 mr-10 ">
+<div class="mt-10 mr-10">
   <h1 class="text-white text-2xl">{title}</h1>
   <div class="w-[600px] h-96 rounded-lg overflow-hidden hover:p-1 ease-in duration-75 hover:border-4 hover:border-violet-900 shadow-2xl shadow-black">
     <a href={href} target="_blank">
       <Image
-        class="relative h-full w-full object-cover rounded-lg "
+        class="relative h-full w-full object-cover rounded-lg"
         src={images[imagePath]()}
         alt={altText}
       />

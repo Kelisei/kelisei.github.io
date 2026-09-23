@@ -1,0 +1,66 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+
+interface BlogPost {
+	slug: string;
+	data: {
+		title: string;
+		description: string;
+		pubDate: Date;
+		updatedDate?: Date;
+	};
+	render: () => Promise<{ Content: any }>;
+}
+
+export async function getStaticPaths() {
+	const raw = (await getCollection('blog')) || [];
+	const posts = raw as unknown as BlogPost[];
+	return posts.map((post) => ({
+		params: { slug: post.slug },
+		props: { post },
+	}));
+}
+
+type Props = {
+	post: BlogPost;
+};
+
+const { post } = Astro.props;
+const { Content } = post ? await post.render() : { Content: null };
+
+const formattedDate = post?.data?.pubDate
+	? post.data.pubDate.toLocaleDateString('en-US', {
+			year: 'numeric',
+			month: 'short',
+			day: 'numeric',
+	  })
+	: '';
+---
+
+{post && Content && (
+	<Layout title={`${post.data.title} | Blog`} description={post.data.description}>
+		<article class="space-y-8">
+			<header class="space-y-3 border-b border-ctp-surface0 pb-6">
+				<a href="/" class="text-sm font-medium text-ctp-lavender hover:text-ctp-mauve transition-colors">
+					&larr; Back to Home
+				</a>
+				<h1 class="text-3xl font-bold tracking-tight text-ctp-text sm:text-4xl">
+					{post.data.title}
+				</h1>
+				<p class="text-sm text-ctp-subtext0">
+					Published on <time datetime={post.data.pubDate.toISOString()}>{formattedDate}</time>
+				</p>
+				{post.data.description && (
+					<p class="text-base text-ctp-subtext1">
+						{post.data.description}
+					</p>
+				)}
+			</header>
+
+			<div class="space-y-4 text-ctp-text leading-relaxed [&>h2]:text-2xl [&>h2]:font-semibold [&>h2]:text-ctp-mauve [&>h2]:pt-4 [&>h3]:text-xl [&>h3]:font-semibold [&>h3]:text-ctp-lavender [&>p]:text-ctp-text [&>ul]:list-disc [&>ul]:pl-5 [&>ol]:list-decimal [&>ol]:pl-5 [&>pre]:bg-ctp-mantle [&>pre]:p-4 [&>pre]:rounded-lg [&>pre]:border [&>pre]:border-ctp-surface0 [&>code]:text-ctp-peach [&>code]:bg-ctp-surface0 [&>code]:px-1.5 [&>code]:py-0.5 [&>code]:rounded [&>a]:text-ctp-blue [&>a]:underline hover:[&>a]:text-ctp-sapphire">
+				<Content />
+			</div>
+		</article>
+	</Layout>
+)}

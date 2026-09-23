@@ -1,22 +1,27 @@
 ---
 interface Props {
 	title: string;
+	description?: string;
 }
 
-const { title } = Astro.props;
+const { title, description = "Personal site and engineering portfolio" } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="en" class="bg-violet-950 ">
+<html lang="en" class="bg-ctp-base text-ctp-text">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="description" content="Astro description" />
+		<meta name="description" content={description} />
 		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
+		<link rel="alternate icon" href="/favicon.ico?v=2" />
+		<link rel="apple-touch-icon" href="/favicon.svg?v=2" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
 	</head>
-	<body>
-		<slot />
+	<body class="min-h-screen bg-ctp-base text-ctp-text antialiased selection:bg-ctp-surface2 selection:text-ctp-mauve">
+		<div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-16">
+			<slot />
+		</div>
 	</body>
 </html>
