@@ -1,0 +1,9 @@
+{
+  "title": "Arkship",
+  "description": "Space simulation and strategy game in active development.",
+  "image": "../../assets/arkship.png",
+  "alt": "Arkship game screenshot",
+  "status": "In progress",
+  "href": "#",
+  "order": 2
+}

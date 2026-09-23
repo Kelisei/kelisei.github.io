@@ -1,0 +1,9 @@
+{
+  "title": "Org Mode Neovim Plugin",
+  "description": "Neovim plugin bringing structured notes and task management into modern Neovim workflows.",
+  "image": "../../assets/orgmode-nvim.png",
+  "alt": "Org mode Neovim plugin screenshot",
+  "status": "In progress",
+  "href": "https://github.com/Kelisei/Neovim-Org-Mode-Emulation-Plugin",
+  "order": 3
+}

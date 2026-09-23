@@ -2,10 +2,6 @@
 import { getCollection } from 'astro:content';
 import { Image } from 'astro:assets';
 import Layout from '../layouts/Layout.astro';
-import arkantosImg from '../assets/arkantos.png';
-import arkshipImg from '../assets/arkship.png';
-import orgmodeImg from '../assets/orgmode-nvim.png';
-import kftr5Img from '../assets/KFTR5.png';
 
 interface BlogPost {
 	slug: string;
@@ -14,6 +10,8 @@ interface BlogPost {
 		description: string;
 		pubDate: Date;
 		updatedDate?: Date;
+		tags?: string[];
+		project?: { id: string } | string;
 	};
 }
 
@@ -22,57 +20,14 @@ const authorName = import.meta.env.PUBLIC_AUTHOR_NAME || "Francisco Percara";
 const role = import.meta.env.PUBLIC_ROLE || "Junior Software / Platform Engineer";
 const company = import.meta.env.PUBLIC_COMPANY || "MetLife";
 const githubUrl = import.meta.env.PUBLIC_GITHUB_URL || "https://github.com/Kelisei";
-const kftr5Url = import.meta.env.PUBLIC_KFTR5_URL || "https://github.com/Kelisei/KFTR5";
-const arkantosUrl = import.meta.env.PUBLIC_ARKANTOS_URL || "#";
-const arkshipUrl = import.meta.env.PUBLIC_ARKSHIP_URL || "#";
-const orgmodeUrl = import.meta.env.PUBLIC_ORGMODE_URL || "#";
 
-const rawPosts = ((await getCollection('blog')) || []) as unknown as BlogPost[];
-const posts = rawPosts.sort(
-	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
-);
+const rawProjects = await getCollection('projects');
+const projects = rawProjects.sort((a, b) => a.data.order - b.data.order);
 
-const projects = [
-	{
-		title: "Arkantos",
-		description: "Custom code editor built locally for desktop development.",
-		image: arkantosImg,
-		alt: "Arkantos code editor interface",
-		status: "In progress",
-		href: arkantosUrl,
-		hasLink: arkantosUrl !== "#",
-	},
-	{
-		title: "Arkship",
-		description: "Space simulation and strategy game in active development.",
-		image: arkshipImg,
-		alt: "Arkship game screenshot",
-		status: "In progress",
-		href: arkshipUrl,
-		hasLink: arkshipUrl !== "#",
-	},
-	{
-		title: "Org Mode Neovim Plugin",
-		description: "Neovim plugin bringing structured notes and task management into modern Neovim workflows.",
-		image: orgmodeImg,
-		alt: "Org mode Neovim plugin screenshot",
-		status: "In progress",
-		href: orgmodeUrl,
-		hasLink: orgmodeUrl !== "#",
-	},
-	{
-		title: "KFTR5",
-		description: "Twitter clone built with Flask, SQLite3, Tailwind CSS, and vanilla JavaScript.",
-		image: kftr5Img,
-		alt: "KFTR5 project preview",
-		status: null,
-		href: kftr5Url,
-		hasLink: true,
-	},
-];
+const allBlogPosts = ((await getCollection('blog')) || []) as unknown as BlogPost[];
 ---
 
-<Layout title={`${siteTitle} | Portfolio & Blog`}>
+<Layout title={`${siteTitle} | Portfolio`}>
 	<div class="space-y-16">
 		<header class="space-y-4">
 			<div class="space-y-2">
@@ -102,7 +57,7 @@ const projects = [
 					Projects
 				</a>
 				<a
-					href="#blog"
+					href="/blog"
 					class="font-medium text-ctp-subtext0 hover:text-ctp-text transition-colors"
 				>
 					Blog
@@ -118,91 +73,65 @@ const projects = [
 			</div>
 
 			<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-				{projects.map((project) => (
-					<article class="flex flex-col overflow-hidden rounded-xl border border-ctp-surface0 bg-ctp-mantle transition-colors hover:border-ctp-surface1">
-						<div class="aspect-video w-full overflow-hidden bg-ctp-crust">
-							<Image
-								src={project.image}
-								alt={project.alt}
-								class="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
-							/>
-						</div>
-						<div class="flex flex-1 flex-col justify-between p-5 space-y-4">
-							<div class="space-y-2">
-								<div class="flex items-center justify-between gap-2">
-									<h3 class="text-xl font-semibold text-ctp-text">
-										{project.title}
-									</h3>
-									{project.status && (
-										<span class="rounded px-2 py-0.5 text-xs font-medium text-ctp-mauve bg-ctp-surface0">
-											{project.status}
-										</span>
-									)}
-								</div>
-								<p class="text-sm leading-relaxed text-ctp-subtext0">
-									{project.description}
-								</p>
-							</div>
-
-							{project.hasLink && (
-								<div>
-									<a
-										href={project.href}
-										target="_blank"
-										rel="noreferrer"
-										class="inline-flex items-center text-sm font-medium text-ctp-lavender hover:text-ctp-mauve transition-colors"
-									>
-										View Repository &rarr;
-									</a>
-								</div>
-							)}
-						</div>
-					</article>
-				))}
-			</div>
-		</section>
-
-		<section id="blog" class="space-y-6">
-			<div class="flex items-baseline justify-between border-b border-ctp-surface0 pb-2">
-				<h2 class="text-2xl font-bold tracking-tight text-ctp-text">
-					Blog
-				</h2>
-			</div>
-
-			{posts.length === 0 ? (
-				<p class="text-sm text-ctp-subtext0">No posts yet.</p>
-			) : (
-				<div class="divide-y divide-ctp-surface0 rounded-xl border border-ctp-surface0 bg-ctp-mantle">
-					{posts.map((post) => {
-						const formattedDate = post.data.pubDate.toLocaleDateString('en-US', {
-							year: 'numeric',
-							month: 'short',
-							day: 'numeric',
-						});
-						return (
-							<a
-								href={`/blog/${post.slug}`}
-								class="group flex flex-col justify-between gap-2 p-5 transition-colors hover:bg-ctp-surface0/30 sm:flex-row sm:items-center"
-							>
-								<div class="space-y-1">
-									<h3 class="text-lg font-semibold text-ctp-text group-hover:text-ctp-mauve transition-colors">
-										{post.data.title}
-									</h3>
-									<p class="text-sm text-ctp-subtext0">
-										{post.data.description}
+				{projects.map((project) => {
+					const postCount = allBlogPosts.filter(
+						(p) =>
+							(typeof p.data.project === 'string' && p.data.project === project.id) ||
+							(p.data.project && typeof p.data.project === 'object' && p.data.project.id === project.id)
+					).length;
+					const hasLink = project.data.href && project.data.href !== '#';
+					const blogProjectUrl = `/blog?project=${project.id}`;
+					return (
+						<article class="flex flex-col overflow-hidden rounded-xl border border-ctp-surface0 bg-ctp-mantle transition-colors hover:border-ctp-surface1">
+							<a href={blogProjectUrl} class="aspect-video w-full overflow-hidden bg-ctp-crust block group/image">
+								<Image
+									src={project.data.image}
+									alt={project.data.alt}
+									class="h-full w-full object-cover transition-transform duration-300 group-hover/image:scale-105"
+								/>
+							</a>
+							<div class="flex flex-1 flex-col justify-between p-5 space-y-4">
+								<div class="space-y-2">
+									<div class="flex items-center justify-between gap-2">
+										<a href={blogProjectUrl} class="group/title">
+											<h3 class="text-xl font-semibold text-ctp-text group-hover/title:text-ctp-mauve transition-colors">
+												{project.data.title}
+											</h3>
+										</a>
+										{project.data.status && (
+											<span class="rounded px-2 py-0.5 text-xs font-medium text-ctp-mauve bg-ctp-surface0">
+												{project.data.status}
+											</span>
+										)}
+									</div>
+									<p class="text-sm leading-relaxed text-ctp-subtext0">
+										{project.data.description}
 									</p>
 								</div>
-								<time
-									datetime={post.data.pubDate.toISOString()}
-									class="shrink-0 text-xs text-ctp-subtext0"
-								>
-									{formattedDate}
-								</time>
-							</a>
-						);
-					})}
-				</div>
-			)}
+
+								<div class="flex flex-wrap items-center gap-4">
+									{hasLink && (
+										<a
+											href={project.data.href}
+											target="_blank"
+											rel="noreferrer"
+											class="inline-flex items-center text-sm font-medium text-ctp-lavender hover:text-ctp-mauve transition-colors"
+										>
+											View Repository &rarr;
+										</a>
+									)}
+									<a
+										href={blogProjectUrl}
+										class="inline-flex items-center text-sm font-medium text-ctp-mauve hover:text-ctp-pink transition-colors"
+									>
+										Devlogs {postCount > 0 ? `(${postCount})` : ''} &rarr;
+									</a>
+								</div>
+							</div>
+						</article>
+					);
+				})}
+			</div>
 		</section>
 	</div>
 </Layout>

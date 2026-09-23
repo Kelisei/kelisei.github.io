@@ -1,0 +1,134 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../../layouts/Layout.astro';
+
+interface BlogPost {
+	slug: string;
+	data: {
+		title: string;
+		description: string;
+		pubDate: Date;
+		updatedDate?: Date;
+		tags?: string[];
+	};
+}
+
+export async function getStaticPaths() {
+	const pageSize = Number(import.meta.env.PUBLIC_BLOG_PAGE_SIZE) || 10;
+	const rawPosts = ((await getCollection('blog')) || []) as unknown as BlogPost[];
+	const allPosts = rawPosts.sort(
+		(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+	);
+	const totalPages = Math.ceil(allPosts.length / pageSize);
+
+	if (totalPages <= 1) {
+		return [];
+	}
+
+	return Array.from({ length: totalPages - 1 }, (_, i) => {
+		const pageNum = i + 2;
+		const startIndex = (pageNum - 1) * pageSize;
+		const endIndex = startIndex + pageSize;
+		return {
+			params: { page: String(pageNum) },
+			props: {
+				posts: allPosts.slice(startIndex, endIndex),
+				currentPage: pageNum,
+				totalPages,
+			},
+		};
+	});
+}
+
+interface Props {
+	posts?: BlogPost[];
+	currentPage?: number;
+	totalPages?: number;
+}
+
+const { posts = [], currentPage = 1, totalPages = 1 } = Astro.props;
+const siteTitle = import.meta.env.PUBLIC_SITE_TITLE || "Kelisei Ventura";
+const prevHref = currentPage === 2 ? "/blog" : `/blog/page/${currentPage - 1}`;
+const nextHref = currentPage < totalPages ? `/blog/page/${currentPage + 1}` : null;
+---
+
+<Layout title={`Blog - Page ${currentPage} | ${siteTitle}`}>
+	<div class="space-y-10">
+		<header class="space-y-3 border-b border-ctp-surface0 pb-6">
+			<a
+				href="/blog"
+				class="text-sm font-medium text-ctp-lavender hover:text-ctp-mauve transition-colors"
+			>
+				&larr; Back to Blog
+			</a>
+			<h1 class="text-4xl font-extrabold tracking-tight text-ctp-text sm:text-5xl">
+				Blog
+			</h1>
+		</header>
+
+		<section class="space-y-6">
+			<div class="divide-y divide-ctp-surface0 rounded-xl border border-ctp-surface0 bg-ctp-mantle">
+				{posts.map((post) => {
+					const formattedDate = post.data.pubDate.toLocaleDateString('en-US', {
+						year: 'numeric',
+						month: 'short',
+						day: 'numeric',
+					});
+					const tags = post.data.tags || [];
+					return (
+						<a
+							href={`/blog/${post.slug}`}
+							class="group flex flex-col justify-between gap-2 p-5 transition-colors hover:bg-ctp-surface0/30 sm:flex-row sm:items-center"
+						>
+							<div class="space-y-1.5">
+								<h3 class="text-lg font-semibold text-ctp-text group-hover:text-ctp-mauve transition-colors">
+									{post.data.title}
+								</h3>
+								<p class="text-sm text-ctp-subtext0">
+									{post.data.description}
+								</p>
+								{tags.length > 0 && (
+									<div class="flex flex-wrap gap-1.5 pt-1">
+										{tags.map((tag) => (
+											<span class="rounded bg-ctp-surface0 px-2 py-0.5 text-xs font-medium text-ctp-mauve">
+												#{tag}
+											</span>
+										))}
+									</div>
+								)}
+							</div>
+							<time
+								datetime={post.data.pubDate.toISOString()}
+								class="shrink-0 text-xs text-ctp-subtext0"
+							>
+								{formattedDate}
+							</time>
+						</a>
+					);
+				})}
+			</div>
+
+			<nav class="flex items-center justify-between border-t border-ctp-surface0 pt-6 text-sm">
+				<a
+					href={prevHref}
+					class="font-medium text-ctp-lavender hover:text-ctp-mauve transition-colors"
+				>
+					&larr; Previous
+				</a>
+				<span class="text-ctp-subtext0">
+					Page {currentPage} of {totalPages}
+				</span>
+				{nextHref ? (
+					<a
+						href={nextHref}
+						class="font-medium text-ctp-lavender hover:text-ctp-mauve transition-colors"
+					>
+						Next &rarr;
+					</a>
+				) : (
+					<span class="text-ctp-overlay0 cursor-not-allowed">Next &rarr;</span>
+				)}
+			</nav>
+		</section>
+	</div>
+</Layout>

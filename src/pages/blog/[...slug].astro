@@ -9,6 +9,8 @@ interface BlogPost {
 		description: string;
 		pubDate: Date;
 		updatedDate?: Date;
+		tags?: string[];
+		project?: { id: string } | string;
 	};
 	render: () => Promise<{ Content: any }>;
 }
@@ -36,21 +38,44 @@ const formattedDate = post?.data?.pubDate
 			day: 'numeric',
 	  })
 	: '';
+
+const projectId = post?.data?.project
+	? typeof post.data.project === 'string'
+		? post.data.project
+		: post.data.project.id
+	: null;
 ---
 
 {post && Content && (
 	<Layout title={`${post.data.title} | Blog`} description={post.data.description}>
 		<article class="space-y-8">
 			<header class="space-y-3 border-b border-ctp-surface0 pb-6">
-				<a href="/" class="text-sm font-medium text-ctp-lavender hover:text-ctp-mauve transition-colors">
-					&larr; Back to Home
+				<a href="/blog" class="text-sm font-medium text-ctp-lavender hover:text-ctp-mauve transition-colors">
+					&larr; Back to Blog
 				</a>
 				<h1 class="text-3xl font-bold tracking-tight text-ctp-text sm:text-4xl">
 					{post.data.title}
 				</h1>
-				<p class="text-sm text-ctp-subtext0">
-					Published on <time datetime={post.data.pubDate.toISOString()}>{formattedDate}</time>
-				</p>
+				<div class="flex flex-wrap items-center gap-3 text-sm text-ctp-subtext0">
+					<time datetime={post.data.pubDate.toISOString()}>{formattedDate}</time>
+					{projectId && (
+						<a
+							href={`/blog?project=${projectId}`}
+							class="rounded bg-ctp-surface0 px-2 py-0.5 text-xs font-medium text-ctp-blue hover:text-ctp-sapphire transition-colors"
+						>
+							Project: {projectId} &rarr;
+						</a>
+					)}
+					{post.data.tags && post.data.tags.length > 0 && (
+						<div class="flex flex-wrap gap-1.5">
+							{post.data.tags.map((tag) => (
+								<span class="rounded bg-ctp-surface0 px-2 py-0.5 text-xs font-medium text-ctp-mauve">
+									#{tag}
+								</span>
+							))}
+						</div>
+					)}
+				</div>
 				{post.data.description && (
 					<p class="text-base text-ctp-subtext1">
 						{post.data.description}

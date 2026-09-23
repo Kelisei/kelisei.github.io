@@ -1,0 +1,9 @@
+{
+  "title": "KFTR5",
+  "description": "Twitter clone built with Flask, SQLite3, Tailwind CSS, and vanilla JavaScript.",
+  "image": "../../assets/KFTR5.png",
+  "alt": "KFTR5 project preview",
+  "status": null,
+  "href": "https://github.com/Kelisei/KFTR5",
+  "order": 4
+}

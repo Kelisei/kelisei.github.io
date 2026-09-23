@@ -1,0 +1,9 @@
+{
+  "title": "Arkantos",
+  "description": "Custom code editor built locally for desktop development.",
+  "image": "../../assets/arkantos.png",
+  "alt": "Arkantos code editor interface",
+  "status": "In progress",
+  "href": "#",
+  "order": 1
+}

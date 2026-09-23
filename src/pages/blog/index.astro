@@ -1,0 +1,439 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+
+interface BlogPost {
+	slug: string;
+	data: {
+		title: string;
+		description: string;
+		pubDate: Date;
+		updatedDate?: Date;
+		tags?: string[];
+		project?: { id: string } | string;
+	};
+}
+
+const siteTitle = import.meta.env.PUBLIC_SITE_TITLE || "Kelisei Ventura";
+const authorName = import.meta.env.PUBLIC_AUTHOR_NAME || "Francisco Percara";
+const pageSize = Number(import.meta.env.PUBLIC_BLOG_PAGE_SIZE) || 10;
+
+const projects = await getCollection('projects');
+const projectMap = new Map<string, string>(projects.map((p) => [p.id, p.data.title]));
+
+const rawPosts = ((await getCollection('blog')) || []) as unknown as BlogPost[];
+const allPosts = rawPosts.sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
+
+const allTags = Array.from(
+	new Set(allPosts.flatMap((post) => post.data.tags || []))
+).sort();
+
+const allYears = Array.from(
+	new Set(allPosts.map((post) => new Date(post.data.pubDate).getFullYear()))
+).sort((a, b) => b - a);
+
+const totalPages = Math.max(1, Math.ceil(allPosts.length / pageSize));
+---
+
+<Layout title={`Blog | ${siteTitle}`} description={`Technical blog and articles by ${authorName}`}>
+	<div class="space-y-8">
+		<header class="space-y-3 border-b border-ctp-surface0 pb-6">
+			<a
+				href="/"
+				class="text-sm font-medium text-ctp-lavender hover:text-ctp-mauve transition-colors"
+			>
+				&larr; Back to Home
+			</a>
+			<h1 class="text-4xl font-extrabold tracking-tight text-ctp-text sm:text-5xl">
+				Blog
+			</h1>
+		</header>
+
+		<section class="space-y-4">
+			<div class="space-y-3 rounded-xl border border-ctp-surface0 bg-ctp-mantle p-4">
+				<div class="relative">
+					<input
+						type="search"
+						id="blog-search"
+						placeholder="Search articles by title, description, or tag..."
+						class="w-full rounded-lg border border-ctp-surface0 bg-ctp-base px-4 py-2.5 text-sm text-ctp-text placeholder-ctp-overlay0 transition-colors focus:border-ctp-mauve focus:outline-none focus:ring-1 focus:ring-ctp-mauve"
+					/>
+				</div>
+
+				<div class="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center sm:justify-between">
+					<div class="flex flex-wrap items-center gap-2">
+						<label for="blog-date-sort" class="text-xs font-medium text-ctp-subtext0">
+							Sort:
+						</label>
+						<select
+							id="blog-date-sort"
+							class="rounded-lg border border-ctp-surface0 bg-ctp-base px-2.5 py-1.5 text-xs text-ctp-text transition-colors focus:border-ctp-mauve focus:outline-none"
+						>
+							<option value="desc">Newest first</option>
+							<option value="asc">Oldest first</option>
+						</select>
+
+						{projects.length > 0 && (
+							<>
+								<label for="blog-project-filter" class="ml-2 text-xs font-medium text-ctp-subtext0">
+									Project:
+								</label>
+								<select
+									id="blog-project-filter"
+									class="rounded-lg border border-ctp-surface0 bg-ctp-base px-2.5 py-1.5 text-xs text-ctp-text transition-colors focus:border-ctp-mauve focus:outline-none"
+								>
+									<option value="all">All</option>
+									{projects.map((project) => (
+										<option value={project.id}>{project.data.title}</option>
+									))}
+								</select>
+							</>
+						)}
+
+						{allYears.length > 0 && (
+							<>
+								<label for="blog-year-filter" class="ml-2 text-xs font-medium text-ctp-subtext0">
+									Year:
+								</label>
+								<select
+									id="blog-year-filter"
+									class="rounded-lg border border-ctp-surface0 bg-ctp-base px-2.5 py-1.5 text-xs text-ctp-text transition-colors focus:border-ctp-mauve focus:outline-none"
+								>
+									<option value="all">All</option>
+									{allYears.map((year) => (
+										<option value={year}>{year}</option>
+									))}
+								</select>
+							</>
+						)}
+					</div>
+
+					{allTags.length > 0 && (
+						<div class="flex flex-wrap items-center gap-1.5">
+							<span class="text-xs font-medium text-ctp-subtext0">Tags:</span>
+							<button
+								type="button"
+								data-tag="all"
+								class="tag-filter-btn active-tag rounded-md bg-ctp-mauve px-2 py-0.5 text-xs font-medium text-ctp-crust transition-colors"
+							>
+								All
+							</button>
+							{allTags.map((tag) => (
+								<button
+									type="button"
+									data-tag={tag.toLowerCase()}
+									class="tag-filter-btn rounded-md bg-ctp-surface0 px-2 py-0.5 text-xs font-medium text-ctp-subtext1 transition-colors hover:text-ctp-mauve"
+								>
+									#{tag}
+								</button>
+							))}
+						</div>
+					)}
+				</div>
+			</div>
+
+			<div
+				id="active-project-banner"
+				class="hidden items-center justify-between rounded-lg border border-ctp-surface0 bg-ctp-surface0/30 px-4 py-2.5 text-xs text-ctp-text"
+			>
+				<span>
+					Showing posts for project: <strong id="active-project-name" class="font-semibold text-ctp-mauve"></strong>
+				</span>
+				<button
+					type="button"
+					id="clear-project-filter"
+					class="text-ctp-lavender underline hover:text-ctp-mauve"
+				>
+					Clear filter
+				</button>
+			</div>
+
+			<div
+				id="posts-container"
+				class="divide-y divide-ctp-surface0 rounded-xl border border-ctp-surface0 bg-ctp-mantle"
+			>
+				{allPosts.map((post, idx) => {
+					const formattedDate = post.data.pubDate.toLocaleDateString('en-US', {
+						year: 'numeric',
+						month: 'short',
+						day: 'numeric',
+					});
+					const tags = post.data.tags || [];
+					const year = new Date(post.data.pubDate).getFullYear();
+					const projectId = post.data.project
+						? typeof post.data.project === 'string'
+							? post.data.project
+							: post.data.project.id
+						: '';
+					const projectTitle = projectId ? projectMap.get(projectId) || projectId : '';
+					const isInitiallyVisible = idx < pageSize;
+					return (
+						<article
+							class={`blog-post-item group p-5 transition-colors hover:bg-ctp-surface0/30 ${isInitiallyVisible ? 'flex' : 'hidden'} flex-col justify-between gap-3 sm:flex-row sm:items-baseline`}
+							data-title={post.data.title.toLowerCase()}
+							data-description={post.data.description.toLowerCase()}
+							data-tags={tags.join(',').toLowerCase()}
+							data-project={projectId.toLowerCase()}
+							data-project-name={projectTitle}
+							data-date={post.data.pubDate.getTime()}
+							data-year={String(year)}
+							data-initial-visible={isInitiallyVisible ? 'true' : 'false'}
+						>
+							<div class="space-y-1.5">
+								<a href={`/blog/${post.slug}`} class="block">
+									<h2 class="text-lg font-semibold text-ctp-text group-hover:text-ctp-mauve transition-colors">
+										{post.data.title}
+									</h2>
+								</a>
+								<p class="text-sm text-ctp-subtext0">
+									{post.data.description}
+								</p>
+								<div class="flex flex-wrap items-center gap-1.5 pt-1">
+									{projectId && (
+										<span class="rounded bg-ctp-surface0 px-2 py-0.5 text-xs font-medium text-ctp-blue">
+											Project: {projectTitle}
+										</span>
+									)}
+									{tags.map((tag) => (
+										<span class="rounded bg-ctp-surface0 px-2 py-0.5 text-xs font-medium text-ctp-mauve">
+											#{tag}
+										</span>
+									))}
+								</div>
+							</div>
+							<time
+								datetime={post.data.pubDate.toISOString()}
+								class="shrink-0 text-xs text-ctp-subtext0"
+							>
+								{formattedDate}
+							</time>
+						</article>
+					);
+				})}
+			</div>
+
+			<p
+				id="no-search-results"
+				class={`${allPosts.length === 0 ? '' : 'hidden'} py-8 text-center text-sm text-ctp-subtext0`}
+			>
+				No articles found matching your criteria.
+			</p>
+
+			{totalPages > 1 && (
+				<nav
+					id="pagination-nav"
+					class="flex items-center justify-between border-t border-ctp-surface0 pt-6 text-sm"
+				>
+					<span class="text-ctp-subtext0">
+						Page 1 of {totalPages}
+					</span>
+					<a
+						href="/blog/page/2"
+						class="font-medium text-ctp-lavender hover:text-ctp-mauve transition-colors"
+					>
+						Next &rarr;
+					</a>
+				</nav>
+			)}
+		</section>
+	</div>
+
+	<script is:inline>
+		document.addEventListener('DOMContentLoaded', () => {
+			const searchInput = document.getElementById('blog-search');
+			const sortSelect = document.getElementById('blog-date-sort');
+			const projectSelect = document.getElementById('blog-project-filter');
+			const yearSelect = document.getElementById('blog-year-filter');
+			const tagButtons = document.querySelectorAll('.tag-filter-btn');
+			const postsContainer = document.getElementById('posts-container');
+			const postItems = Array.from(document.querySelectorAll('.blog-post-item'));
+			const noResults = document.getElementById('no-search-results');
+			const paginationNav = document.getElementById('pagination-nav');
+			const projectBanner = document.getElementById('active-project-banner');
+			const activeProjectName = document.getElementById('active-project-name');
+			const clearProjectFilterBtn = document.getElementById('clear-project-filter');
+
+			const urlParams = new URLSearchParams(window.location.search);
+			const urlProject = urlParams.get('project');
+			if (urlProject && projectSelect) {
+				const matchingOption = Array.from(projectSelect.options).find(
+					(opt) => opt.value.toLowerCase() === urlProject.toLowerCase()
+				);
+				if (matchingOption) {
+					projectSelect.value = matchingOption.value;
+				}
+			}
+
+			if (projectBanner && projectSelect && projectSelect.value !== 'all') {
+				projectBanner.classList.remove('hidden');
+				projectBanner.classList.add('flex');
+				if (activeProjectName) {
+					activeProjectName.textContent = projectSelect.options[projectSelect.selectedIndex]?.text || projectSelect.value;
+				}
+			}
+
+			if (postItems.length === 0) {
+				if (noResults) {
+					if (projectSelect && projectSelect.value !== 'all') {
+						const name = projectSelect.options[projectSelect.selectedIndex]?.text || projectSelect.value;
+						noResults.textContent = `No blog posts published for ${name} yet.`;
+					} else {
+						noResults.textContent = 'No blog posts published yet.';
+					}
+					noResults.classList.remove('hidden');
+				}
+				if (clearProjectFilterBtn && projectSelect) {
+					clearProjectFilterBtn.addEventListener('click', () => {
+						projectSelect.value = 'all';
+						const newUrl = new URL(window.location.href);
+						newUrl.searchParams.delete('project');
+						window.location.href = newUrl.pathname;
+					});
+				}
+				return;
+			}
+
+			let activeTag = 'all';
+
+			function applyFilters() {
+				const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+				const sortOrder = sortSelect ? sortSelect.value : 'desc';
+				const selectedYear = yearSelect ? yearSelect.value : 'all';
+				const selectedProject = projectSelect ? projectSelect.value.toLowerCase() : 'all';
+				const isFiltering = query.length > 0 || activeTag !== 'all' || selectedYear !== 'all' || selectedProject !== 'all' || sortOrder !== 'desc';
+
+				let matches = [];
+
+				postItems.forEach((item) => {
+					const title = item.getAttribute('data-title') || '';
+					const desc = item.getAttribute('data-description') || '';
+					const tags = item.getAttribute('data-tags') || '';
+					const year = item.getAttribute('data-year') || '';
+					const itemProject = item.getAttribute('data-project') || '';
+
+					const matchesQuery = query === '' || title.includes(query) || desc.includes(query) || tags.includes(query);
+					const matchesTag = activeTag === 'all' || tags.split(',').map((t) => t.trim()).includes(activeTag);
+					const matchesYear = selectedYear === 'all' || year === selectedYear;
+					const matchesProject = selectedProject === 'all' || itemProject === selectedProject;
+
+					if (matchesQuery && matchesTag && matchesYear && matchesProject) {
+						matches.push(item);
+					} else {
+						item.classList.add('hidden');
+						item.classList.remove('flex');
+					}
+				});
+
+				matches.sort((a, b) => {
+					const dateA = Number(a.getAttribute('data-date')) || 0;
+					const dateB = Number(b.getAttribute('data-date')) || 0;
+					return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+				});
+
+				matches.forEach((item) => {
+					postsContainer.appendChild(item);
+				});
+
+				if (projectBanner) {
+					if (selectedProject !== 'all') {
+						projectBanner.classList.remove('hidden');
+						projectBanner.classList.add('flex');
+						if (activeProjectName && projectSelect) {
+							activeProjectName.textContent = projectSelect.options[projectSelect.selectedIndex]?.text || selectedProject;
+						}
+					} else {
+						projectBanner.classList.add('hidden');
+						projectBanner.classList.remove('flex');
+					}
+				}
+
+				if (!isFiltering) {
+					postItems.forEach((item) => {
+						const isInitial = item.getAttribute('data-initial-visible') === 'true';
+						if (isInitial) {
+							item.classList.remove('hidden');
+							item.classList.add('flex');
+						} else {
+							item.classList.add('hidden');
+							item.classList.remove('flex');
+						}
+					});
+					if (paginationNav) paginationNav.style.display = '';
+					if (noResults) noResults.classList.add('hidden');
+				} else {
+					matches.forEach((item) => {
+						item.classList.remove('hidden');
+						item.classList.add('flex');
+					});
+					if (paginationNav) paginationNav.style.display = 'none';
+					if (noResults) {
+						if (matches.length === 0) {
+							if (selectedProject !== 'all') {
+								const name = projectSelect ? projectSelect.options[projectSelect.selectedIndex]?.text || selectedProject : selectedProject;
+								noResults.textContent = `No blog posts published for ${name} yet.`;
+							} else {
+								noResults.textContent = 'No articles found matching your criteria.';
+							}
+							noResults.classList.remove('hidden');
+						} else {
+							noResults.classList.add('hidden');
+						}
+					}
+				}
+			}
+
+			applyFilters();
+
+			if (searchInput) {
+				searchInput.addEventListener('input', applyFilters);
+			}
+
+			if (sortSelect) {
+				sortSelect.addEventListener('change', applyFilters);
+			}
+
+			if (projectSelect) {
+				projectSelect.addEventListener('change', () => {
+					const val = projectSelect.value;
+					const newUrl = new URL(window.location.href);
+					if (val === 'all') {
+						newUrl.searchParams.delete('project');
+					} else {
+						newUrl.searchParams.set('project', val);
+					}
+					window.history.pushState(null, '', newUrl.toString());
+					applyFilters();
+				});
+			}
+
+			if (yearSelect) {
+				yearSelect.addEventListener('change', applyFilters);
+			}
+
+			if (clearProjectFilterBtn && projectSelect) {
+				clearProjectFilterBtn.addEventListener('click', () => {
+					projectSelect.value = 'all';
+					const newUrl = new URL(window.location.href);
+					newUrl.searchParams.delete('project');
+					window.history.pushState(null, '', newUrl.toString());
+					applyFilters();
+				});
+			}
+
+			tagButtons.forEach((btn) => {
+				btn.addEventListener('click', () => {
+					tagButtons.forEach((b) => {
+						b.classList.remove('bg-ctp-mauve', 'text-ctp-crust', 'active-tag');
+						b.classList.add('bg-ctp-surface0', 'text-ctp-subtext1');
+					});
+					btn.classList.remove('bg-ctp-surface0', 'text-ctp-subtext1');
+					btn.classList.add('bg-ctp-mauve', 'text-ctp-crust', 'active-tag');
+					activeTag = btn.getAttribute('data-tag') || 'all';
+					applyFilters();
+				});
+			});
+		});
+	</script>
+</Layout>
